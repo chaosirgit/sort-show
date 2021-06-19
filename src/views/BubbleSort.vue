@@ -3,6 +3,7 @@
     <div>
       <el-row>
         <el-button @click="beginSort">开始排序</el-button>
+        <el-button @click="reset">重置</el-button>
       </el-row>
       <div id="myCharts" style="width: 100%;height: 680px;margin-top: 20px;">
 
@@ -26,10 +27,15 @@ export default {
       someData: [],
       colorList: [],
       list:[],
+      flag: false,
+      isColor: false,
+      i: 0,
+      j: 1,
       initColor: '#409EFF',
       selectColor: 'hotpink',
+      needColor: 'orange',
       successColor: '#5CB87A',
-      arrayLength: 10,
+      arrayLength: 100,
       myCharts : '',
       myOptions: {
           title: {
@@ -60,7 +66,7 @@ export default {
     fetchData(){
       this.someData = Array.from({length:this.arrayLength},() => {return Math.ceil(Math.random()*this.arrayLength)})
       this.list = this.someData.map((item,index)=>{
-        return {value: item,color: this.initColor,id:index}
+        return {value: item,color: this.initColor,id:index,sort:false}
       })
       this.colorList = this.list.map(item => {return item.color})
       this.setColor()
@@ -78,26 +84,86 @@ export default {
         return this.colorList[params.dataIndex]
       }
     },
-    beginSort(){
-      for (var i = 0; i < this.list.length ; i++){
-          for (var j = i + 1; j < this.list.length; j++){
-            this.colorList = this.list.map(item => {
-              var color = this.initColor
-              if ((item.id === i) || (item.id === j)){
-                color = this.selectColor
-              }
-              return color
-            })
-            if (this.list[i].value > this.list[j].value){
-              var temp = this.list[j]
-              this.list[j] = this.list[i]
-              this.list[i] = temp
-            }
-            this.myOptions.animation = false
-            this.setColor()
-            this.setChartData()
-            this.fetchChart()
+    reset() {
+      this.fetchData()
+      this.fetchChart()
+      this.flag = false
+    },
+    beginSort() {
+      let begin = Date.parse( new Date());
+      var timer = setInterval(() => {
+        if (this.flag){
+          clearInterval(timer)
+          let end = Date.parse( new Date());
+          this.$message({
+            message: '排序完成,耗时' + (end - begin) + '毫秒',
+            type: 'success'
+          });
+        }else{
+          this.bubbleSort()
+        }
+      }, 50)
+    },
+    viewColor(){
+      this.colorList = this.list.map((item,index) => {
+        var color = this.initColor
+        if ((index === this.i) || (index === this.j)){
+          color = this.selectColor
+        }
+        if (item.sort){
+          color = this.successColor
+        }
+        return color
+      })
+      this.myOptions.animation = false
+      this.isColor = true
+      this.setColor()
+      this.setChartData()
+      this.fetchChart()
+    },
+    bubbleSort() {
+      if (!this.flag){
+        if (!this.isColor){
+          this.viewColor()
+        }else{
+          this.isColor = false
+          const lastLength = this.list.length - this.list.filter((item) => {
+            return item.sort === true
+          }).length
+
+          const needLength = this.list.filter((item) => {
+            return item.sort === false
+          }).length
+
+          if (needLength === 0){
+            this.flag = true
           }
+
+          if (!this.list[this.i].sort){
+            if (this.list[this.i].value > this.list[this.j].value){
+              let temp = this.list[this.j]
+              this.list[this.j] = this.list[this.i]
+              this.list[this.i] = temp
+            }
+            this.i = this.j
+
+            if (needLength <= 1){
+              this.list[this.i - 1].sort = true
+            }else{
+              if (this.i + 1 >= lastLength){
+                this.list[this.i].sort = true
+                this.i = 0
+                this.j = 1
+              }else{
+                this.j++
+              }
+            }
+          }
+          this.setChartData()
+          this.fetchChart()
+        }
+      }else{
+        console.log('done')
       }
     }
   }
