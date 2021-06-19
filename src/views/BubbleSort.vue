@@ -29,13 +29,14 @@ export default {
       list:[],
       flag: false,
       isColor: false,
+      timer: '',
       i: 0,
       j: 1,
       initColor: '#409EFF',
       selectColor: 'hotpink',
       needColor: 'orange',
       successColor: '#5CB87A',
-      arrayLength: 100,
+      arrayLength: 200,
       myCharts : '',
       myOptions: {
           title: {
@@ -88,12 +89,17 @@ export default {
       this.fetchData()
       this.fetchChart()
       this.flag = false
+      if (this.timer){
+        clearInterval(this.timer)
+      }
+      this.i = 0
+      this.j = 1
     },
     beginSort() {
       let begin = Date.parse( new Date());
-      var timer = setInterval(() => {
+       this.timer = setInterval(() => {
         if (this.flag){
-          clearInterval(timer)
+          clearInterval(this.timer)
           let end = Date.parse( new Date());
           this.$message({
             message: '排序完成,耗时' + (end - begin) + '毫秒',
@@ -102,7 +108,7 @@ export default {
         }else{
           this.bubbleSort()
         }
-      }, 50)
+      }, 30)
     },
     viewColor(){
       this.colorList = this.list.map((item,index) => {
